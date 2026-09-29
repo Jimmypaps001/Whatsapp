@@ -7,6 +7,7 @@ question. These sites run different app sets - one has no Buying module at all
 
 import frappe
 from frappe.custom.doctype.custom_field.custom_field import create_custom_fields
+from frappe.custom.doctype.property_setter.property_setter import make_property_setter
 
 from upande_whatsapp.whatsapp_fields import WHATSAPP_NUMBER_FIELDS
 
@@ -15,10 +16,34 @@ DEFAULTS = {"fieldtype": "Data", "read_only": 1, "no_copy": 1, "translatable": 0
 
 def after_install():
 	sync_whatsapp_number_fields()
+	allow_recipient_list_import()
 
 
 def after_migrate():
 	sync_whatsapp_number_fields()
+	allow_recipient_list_import()
+
+
+def allow_recipient_list_import():
+	"""Let recipient lists be built with the Data Import tool.
+
+	frappe_whatsapp ships `WhatsApp Recipient List` with Allow Import off, so
+	the tool refuses it. A Property Setter turns it on without editing their
+	app, and survives an update of it.
+	"""
+	doctype = "WhatsApp Recipient List"
+	if not frappe.db.exists("DocType", doctype):
+		return
+
+	make_property_setter(
+		doctype,
+		None,
+		"allow_import",
+		1,
+		"Check",
+		for_doctype=True,
+		validate_fields_for_doctype=False,
+	)
 
 
 def sync_whatsapp_number_fields():

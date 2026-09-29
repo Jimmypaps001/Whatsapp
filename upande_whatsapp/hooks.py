@@ -285,6 +285,7 @@ app_include_js = "/assets/upande_whatsapp/js/whatsapp_popup.js"
 doc_events = {
 	# Toast every WhatsApp Manager when a customer writes in.
 	"WhatsApp Message": {"after_insert": "upande_whatsapp.incoming_alert.notify_incoming"},
+	"WhatsApp Recipient List": {"before_save": "upande_whatsapp.normalise.normalise_recipient_list"},
 	"Purchase Order": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
 	"Purchase Invoice": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
 	"Sales Order": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},

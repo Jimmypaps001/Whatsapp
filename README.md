@@ -38,3 +38,28 @@ never logged, and frappe_whatsapp's `format_number` only strips a leading `+` -
 it never adds a country code. So these fields are rewritten into international
 form on save (`normalise.py`). Numbers that already carry another country's
 code are left alone.
+
+### Recipient lists
+
+frappe_whatsapp already has `WhatsApp Recipient List`, which can pull its
+members out of any doctype with a filter, and `Bulk WhatsApp Message` to send
+to one. It ships with Allow Import off, so this app turns it on with a Property
+Setter - the lists themselves are site data and are loaded with the Data Import
+tool, one row per list:
+
+| column | value |
+| --- | --- |
+| `list_name` | e.g. `Managers`, `Growers`, `Dept - Production - KR` |
+| `doctype_to_import` | `Employee` |
+| `mobile_field` | `cell_number` |
+| `name_field` | `employee_name` |
+| `import_filters` | e.g. `{"status": "Active", "cell_number": ["is", "set"], "designation": ["like", "%Manager%"]}` |
+| `data_fields` | `["employee_name", "designation", "department"]` - available as template variables |
+
+Press **Import** on the list (or call
+`frappe_whatsapp.utils.bulk_messaging.import_recipients`) to refresh it from
+the current staff. A list is a standing query, not a snapshot: re-import after
+joiners and leavers.
+
+Numbers are corrected on save here too, because the importer copies whatever
+format the HR record holds.

@@ -51,3 +51,20 @@ def _country_code():
 	code = frappe.db.get_single_value("Upande WhatsApp Settings", "default_country_code") \
 		if frappe.db.exists("DocType", "Upande WhatsApp Settings") else None
 	return (code or DEFAULT_COUNTRY_CODE).lstrip("+")
+
+
+def normalise_recipient_list(doc, method=None):
+	"""Correct the numbers in a recipient list as it is saved.
+
+	frappe_whatsapp builds these rows straight from a source doctype and only
+	strips non-digits, so a list imported from Employee inherits whatever
+	format the HR data happens to be in. One bad row is one silent 400 per
+	send, so they are fixed here rather than discovered a broadcast later.
+	"""
+	for row in doc.get("recipients") or []:
+		current = row.get("mobile_number")
+		if not current:
+			continue
+		cleaned = to_msisdn(current)
+		if cleaned and cleaned != current:
+			row.mobile_number = cleaned
