@@ -275,9 +275,13 @@ fixtures = [
 	{"dt": "Web Page", "filters": [["name", "in", ["whatsapp"]]]},
 ]
 
+app_include_js = "/assets/upande_whatsapp/js/whatsapp_popup.js"
+
 # Meta rejects a local-format number with an unexplained 400, so the app's own
 # number fields are corrected on the way in. See upande_whatsapp/normalise.py.
 doc_events = {
+	# Toast every WhatsApp Manager when a customer writes in.
+	"WhatsApp Message": {"after_insert": "upande_whatsapp.incoming_alert.notify_incoming"},
 	"Purchase Order": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
 	"Purchase Invoice": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
 	"Sales Order": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
