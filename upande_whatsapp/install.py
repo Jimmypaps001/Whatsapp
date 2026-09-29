@@ -58,6 +58,16 @@ def put_workspace_on_the_desk():
 	_ensure_sidebar()
 	_ensure_desktop_icon()
 
+	# get_desktop_icons caches its result per user, so anyone with a session
+	# from before the install keeps seeing an apps screen without this app on
+	# it. Drop the cache so it appears without each person having to do
+	# anything.
+	for key in ("desktop_icons", "bootinfo"):
+		try:
+			frappe.cache.delete_key(key)
+		except Exception:
+			pass
+
 
 def _ensure_sidebar():
 	if frappe.db.exists("Workspace Sidebar", WORKSPACE):
