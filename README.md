@@ -8,9 +8,14 @@ hard dependency (`required_apps`).
 
 **The WhatsApp dashboard**, as code rather than as rows in a site database:
 the `WhatsApp` Workspace (now owned by the `Upande WhatsApp` module), the
-`WhatsApp` Custom HTML Block it renders, and the `/whatsapp` Web Page. They
-ship as fixtures, so a migrate restores them and a site edit is overwritten -
-export the record back into `upande_whatsapp/fixtures/` to keep a desk change.
+`WhatsApp` Custom HTML Block it renders, and the `/whatsapp` Web Page.
+
+The Workspace lives at `upande_whatsapp/workspace/whatsapp/whatsapp.json`, not
+in `fixtures/`. Frappe syncs workspaces from that folder and **deletes any
+workspace belonging to an installed app that has no file there**, so a fixture
+copy is removed on the next migrate. The block and the web page are fixtures.
+Either way a migrate overwrites the live record, so export a desk edit back
+into the repo or it is lost on the next deploy.
 
 **WhatsApp number fields** on the documents we send about - Purchase Order,
 Purchase Invoice, Sales Order, Sales Invoice, Delivery Note and Material

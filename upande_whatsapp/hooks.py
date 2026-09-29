@@ -269,8 +269,11 @@ after_migrate = "upande_whatsapp.install.after_migrate"
 # reviewed and rolled back like anything else. Fixtures overwrite the live
 # records on migrate, which is the point - but it also means an edit made in
 # the desk is lost on the next deploy unless it is exported back here.
+# The Workspace is NOT a fixture: Frappe syncs workspaces from
+# <module>/workspace/<name>/<name>.json and deletes any workspace belonging to
+# an installed app that has no such file, so a fixture copy is removed on the
+# next migrate. The block it renders does have to be a fixture.
 fixtures = [
-	{"dt": "Workspace", "filters": [["name", "in", ["WhatsApp"]]]},
 	{"dt": "Custom HTML Block", "filters": [["name", "in", ["WhatsApp"]]]},
 	{"dt": "Web Page", "filters": [["name", "in", ["whatsapp"]]]},
 ]
