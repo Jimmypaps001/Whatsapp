@@ -14,14 +14,95 @@ from upande_whatsapp.whatsapp_fields import WHATSAPP_NUMBER_FIELDS
 DEFAULTS = {"fieldtype": "Data", "read_only": 1, "no_copy": 1, "translatable": 0}
 
 
+WORKSPACE = "WhatsApp"
+SIDEBAR_LINKS = [
+	("WhatsApp Chat", "URL", "/whatsapp", "message"),
+	("Messages", "DocType", "WhatsApp Message", "list"),
+	("Recipient Lists", "DocType", "WhatsApp Recipient List", "users"),
+	("Bulk Messages", "DocType", "Bulk WhatsApp Message", "send"),
+	("Templates", "DocType", "WhatsApp Templates", "file"),
+	("Notifications", "DocType", "WhatsApp Notification", "notification"),
+	("Accounts", "DocType", "WhatsApp Account", "setting"),
+]
+
+
 def after_install():
 	sync_whatsapp_number_fields()
 	allow_recipient_list_import()
+	put_workspace_on_the_desk()
 
 
 def after_migrate():
 	sync_whatsapp_number_fields()
 	allow_recipient_list_import()
+	put_workspace_on_the_desk()
+
+
+def put_workspace_on_the_desk():
+	"""Make the workspace reachable, not merely present.
+
+	A Workspace record on its own shows up nowhere: v16 drives the sidebar from
+	`Workspace Sidebar` and the app switcher from `Desktop Icon`. Frappe
+	generates both after an install, but one badly-formed `add_to_apps_screen`
+	in any installed app raises a KeyError that aborts the whole pass
+	(desktop_icon.py reads `app_details[0]["logo"]` unguarded), so this app
+	creates its own rather than depend on that succeeding.
+	"""
+	if not frappe.db.exists("Workspace", WORKSPACE):
+		return
+
+	# it used to hang off another app's page, which hides it from the sidebar
+	if frappe.db.get_value("Workspace", WORKSPACE, "parent_page"):
+		frappe.db.set_value("Workspace", WORKSPACE, "parent_page", "", update_modified=False)
+
+	_ensure_sidebar()
+	_ensure_desktop_icon()
+
+
+def _ensure_sidebar():
+	if frappe.db.exists("Workspace Sidebar", WORKSPACE):
+		return
+	icon = frappe.db.get_value("Workspace", WORKSPACE, "icon") or "message"
+	doc = frappe.new_doc("Workspace Sidebar")
+	doc.title = WORKSPACE
+	doc.header_icon = icon
+	doc.module = "Upande WhatsApp"
+	doc.app = "upande_whatsapp"
+	doc.standard = 0          # a standard sidebar with no file is swept as an orphan
+	doc.append("items", {"label": "Home", "link_type": "Workspace", "link_to": WORKSPACE,
+	                     "type": "Link", "icon": icon})
+	for label, link_type, link_to, item_icon in SIDEBAR_LINKS:
+		if link_type == "DocType" and not frappe.db.exists("DocType", link_to):
+			continue      # a site without that part of frappe_whatsapp just gets fewer links
+		row = {"label": label, "link_type": link_type, "type": "Link", "icon": item_icon}
+		if link_type == "URL":
+			row["url"] = link_to
+		else:
+			row["link_to"] = link_to
+		doc.append("items", row)
+	try:
+		doc.insert(ignore_permissions=True)
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "upande_whatsapp: could not create the sidebar")
+
+
+def _ensure_desktop_icon():
+	if not frappe.db.exists("DocType", "Desktop Icon"):
+		return
+	if frappe.db.exists("Desktop Icon", {"icon_type": "App", "app": "upande_whatsapp"}):
+		return
+	try:
+		icon = frappe.new_doc("Desktop Icon")
+		icon.label = "WhatsApp"
+		icon.icon_type = "App"
+		icon.link_type = "External"
+		icon.app = "upande_whatsapp"
+		icon.link = "/app/whatsapp"
+		icon.logo_url = "/assets/upande_whatsapp/images/logo.svg"
+		icon.standard = 0
+		icon.insert(ignore_permissions=True)
+	except Exception:
+		frappe.log_error(frappe.get_traceback(), "upande_whatsapp: could not create the app icon")
 
 
 def allow_recipient_list_import():

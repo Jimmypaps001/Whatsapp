@@ -259,7 +259,7 @@
  "module": "Upande WhatsApp",
  "name": "WhatsApp",
  "number_cards": [],
- "parent_page": "Upande CRM",
+ "parent_page": "",
  "public": 1,
  "quick_lists": [],
  "restrict_to_domain": "",

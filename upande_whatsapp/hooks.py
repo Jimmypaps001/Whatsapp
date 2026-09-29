@@ -11,6 +11,18 @@ app_license = "mit"
 required_apps = ["frappe_whatsapp"]
 
 # Each item in the list will be shown as an app in the apps page
+add_to_apps_screen = [
+	{
+		"name": "upande_whatsapp",
+		"title": "WhatsApp",
+		"route": "/app/whatsapp",
+		# frappe reads this key unguarded when it builds the app tile
+		# (desktop_icon.py: icon.logo_url = app_details[0]["logo"]), and a
+		# KeyError there aborts icon and sidebar creation for every app.
+		"logo": "/assets/upande_whatsapp/images/logo.svg",
+	}
+]
+
 # add_to_apps_screen = [
 # 	{
 # 		"name": "upande_whatsapp",
