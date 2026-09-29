@@ -8,7 +8,7 @@ app_license = "mit"
 # Apps
 # ------------------
 
-# required_apps = []
+required_apps = ["frappe_whatsapp"]
 
 # Each item in the list will be shown as an app in the apps page
 # add_to_apps_screen = [
@@ -256,3 +256,32 @@ app_license = "mit"
 # List of apps whose translatable strings should be excluded from this app's translations.
 # ignore_translatable_strings_from = []
 
+
+
+# ---------------------------------------------------------------------------
+# Upande WhatsApp
+# ---------------------------------------------------------------------------
+
+after_install = "upande_whatsapp.install.after_install"
+after_migrate = "upande_whatsapp.install.after_migrate"
+
+# The dashboard lives here rather than in the site database, so it can be
+# reviewed and rolled back like anything else. Fixtures overwrite the live
+# records on migrate, which is the point - but it also means an edit made in
+# the desk is lost on the next deploy unless it is exported back here.
+fixtures = [
+	{"dt": "Workspace", "filters": [["name", "in", ["WhatsApp"]]]},
+	{"dt": "Custom HTML Block", "filters": [["name", "in", ["WhatsApp"]]]},
+	{"dt": "Web Page", "filters": [["name", "in", ["whatsapp"]]]},
+]
+
+# Meta rejects a local-format number with an unexplained 400, so the app's own
+# number fields are corrected on the way in. See upande_whatsapp/normalise.py.
+doc_events = {
+	"Purchase Order": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
+	"Purchase Invoice": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
+	"Sales Order": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
+	"Sales Invoice": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
+	"Delivery Note": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
+	"Material Request": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
+}
