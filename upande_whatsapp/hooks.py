@@ -298,6 +298,7 @@ doc_events = {
 	# Toast every WhatsApp Manager when a customer writes in.
 	"WhatsApp Message": {"after_insert": "upande_whatsapp.incoming_alert.notify_incoming"},
 	"WhatsApp Recipient List": {"before_save": "upande_whatsapp.normalise.normalise_recipient_list"},
+	"WhatsApp Profiles": {"before_insert": "upande_whatsapp.api.link_one_profile"},
 	"Purchase Order": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
 	"Purchase Invoice": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
 	"Sales Order": {"before_save": "upande_whatsapp.normalise.normalise_number_fields"},
