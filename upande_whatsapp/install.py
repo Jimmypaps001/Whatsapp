@@ -70,10 +70,24 @@ def put_workspace_on_the_desk():
 
 
 def _ensure_sidebar():
-	if frappe.db.exists("Workspace Sidebar", WORKSPACE):
-		return
+	"""Create the sidebar, or take over the one Frappe generated for us.
+
+	Frappe auto-generates a bare two-item sidebar for any public workspace, and
+	on a site where the workspace already existed that sidebar predates this app
+	and belongs to whichever module owned the workspace then. Skipping it leaves
+	the app's own links permanently missing, so an existing sidebar is adopted
+	and refilled rather than left alone.
+	"""
 	icon = frappe.db.get_value("Workspace", WORKSPACE, "icon") or "message"
-	doc = frappe.new_doc("Workspace Sidebar")
+	existing = frappe.db.exists("Workspace Sidebar", WORKSPACE)
+	if existing:
+		doc = frappe.get_doc("Workspace Sidebar", WORKSPACE)
+		# a sidebar someone has deliberately built out is left alone
+		if len(doc.items) > len(SIDEBAR_LINKS):
+			return
+		doc.items = []
+	else:
+		doc = frappe.new_doc("Workspace Sidebar")
 	doc.title = WORKSPACE
 	doc.header_icon = icon
 	doc.module = "Upande WhatsApp"
@@ -91,7 +105,7 @@ def _ensure_sidebar():
 			row["link_to"] = link_to
 		doc.append("items", row)
 	try:
-		doc.insert(ignore_permissions=True)
+		doc.save(ignore_permissions=True) if existing else doc.insert(ignore_permissions=True)
 	except Exception:
 		frappe.log_error(frappe.get_traceback(), "upande_whatsapp: could not create the sidebar")
 
@@ -101,9 +115,20 @@ def _ensure_desktop_icon():
 		return
 	if frappe.db.exists("Desktop Icon", {"icon_type": "App", "app": "upande_whatsapp"}):
 		return
+
+	# Desktop Icon is named after its label, and Frappe has usually already made
+	# a *Link* icon called "WhatsApp" for the workspace itself. Two icons cannot
+	# share a name, so the app tile takes the app's own title instead - which is
+	# also what the apps screen would have labelled it.
+	label = "WhatsApp"
+	if frappe.db.exists("Desktop Icon", label):
+		label = frappe.get_hooks("app_title", app_name="upande_whatsapp")[0]
+		if frappe.db.exists("Desktop Icon", label):
+			return
+
 	try:
 		icon = frappe.new_doc("Desktop Icon")
-		icon.label = "WhatsApp"
+		icon.label = label
 		icon.icon_type = "App"
 		icon.link_type = "External"
 		icon.app = "upande_whatsapp"
