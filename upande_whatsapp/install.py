@@ -55,7 +55,9 @@ def put_workspace_on_the_desk():
 	if frappe.db.get_value("Workspace", WORKSPACE, "parent_page"):
 		frappe.db.set_value("Workspace", WORKSPACE, "parent_page", "", update_modified=False)
 
-	_ensure_sidebar()
+	# v15 has neither doctype - its sidebar is built from the Workspace itself
+	if frappe.db.exists("DocType", "Workspace Sidebar"):
+		_ensure_sidebar()
 	_ensure_desktop_icon()
 
 	# get_desktop_icons caches its result per user, so anyone with a session
